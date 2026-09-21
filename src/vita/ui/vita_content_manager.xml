@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resource version="0.1" type="normal" id="vita_content_manager">
+  <pagetable><page id="page_main">
+    <plane style="background_style" id="background">
+      <layout_hint size="960,544" />
+      <text style="system_label_style" id="system_label"><layout_hint size="360,24" pos="-272,257" /></text>
+      <text style="system_status_style" id="status_text"><layout_hint size="276,24" pos="320,257" /></text>
+      <text style="title_style" id="title_text"><layout_hint size="740,57" pos="0,208" /></text>
+      <button sound="_common_sound_button_enter" style="_common_default_style_button" id="usb_mode_button">
+        <layout_hint size="168,40" pos="388,208" />
+      </button>
+      <list_view style="_common_style_list_view_transparent" id="queue_list"><layout_hint size="856,392" pos="0,-20" /></list_view>
+      <text style="empty_style" id="empty_text"><layout_hint size="820,96" pos="0,-20" /></text>
+    </plane>
+  </page></pagetable>
+  <templatetable>
+  <template id="transfer_progress_contents">
+    <box id="transfer_progress_box">
+      <layout_box size="650,180" pos="0,0" />
+      <text style="dialog_label_style" id="transfer_label"><layout_hint size="440,30" pos="-95,61" /></text>
+      <text style="dialog_value_style" id="transfer_value"><layout_hint size="150,30" pos="245,61" /></text>
+      <progressbar style="_common_default_style_progressbar" id="transfer_bar" signal_anim="1">
+        <layout_hint size="600,24" pos="0,27" />
+      </progressbar>
+      <text style="dialog_label_style" id="import_label"><layout_hint size="440,30" pos="-95,-23" /></text>
+      <text style="dialog_value_style" id="import_value"><layout_hint size="150,30" pos="245,-23" /></text>
+      <progressbar style="_common_default_style_progressbar" id="import_bar" signal_anim="1">
+        <layout_hint size="600,24" pos="0,-57" />
+      </progressbar>
+    </box>
+  </template>
+  <template id="queue_row">
+    <list_item style="_common_style_list_item_transparent" id="row">
+      <layout_hint size="856,80" />
+      <button sound="_common_sound_button_enter" style="row_button_style" id="row_button">
+        <layout_hint size="856,80" />
+        <focus_hint focus_shape="3" focus_size="856,80,0" />
+      </button>
+      <plane style="icon_style" id="row_icon"><layout_hint size="64,64" pos="-379,0" /></plane>
+      <text style="row_name_style" id="row_name"><layout_hint size="610,50" pos="-15,17" /></text>
+      <text style="row_detail_style" id="row_detail"><layout_hint size="600,28" pos="-17,-16" /></text>
+      <text style="row_state_style" id="row_state"><layout_hint size="124,28" pos="330,0" /></text>
+    </list_item>
+  </template></templatetable>
+  <styletable>
+    <style_plane color="1,1,1,1" planeobj="background_obj" id="background_style"><planeobj texture0="background_texture" id="background_obj" /></style_plane>
+    <style_button bg_obj="row_button_bg" glow_obj="row_button_glow" label_obj="row_button_label" id="row_button_style">
+      <planeobj texture0="row_surface_texture" id="row_button_bg" />
+      <planeobj texture0="_common_texture_list_glow_70px" id="row_button_glow" />
+      <textobj font_size="1" color="0,0,0,0" id="row_button_label" />
+    </style_button>
+    <style_plane color="1,1,1,1" planeobj="icon_obj" id="icon_style"><planeobj id="icon_obj" /></style_plane>
+    <style_text textobj="system_label_obj" id="system_label_style"><textobj font_size="17" color="0.86,0.87,0.92,1" align_x="0" align_y="1" ellipsis="1" id="system_label_obj" /></style_text>
+    <style_text textobj="system_status_obj" id="system_status_style"><textobj font_size="17" color="0.86,0.87,0.92,1" align_x="2" align_y="1" ellipsis="1" id="system_status_obj" /></style_text>
+    <style_text textobj="title_obj" id="title_style"><textobj font_size="32" color="1,1,1,1" align_x="1" align_y="1" text_align="1" ellipsis="1" id="title_obj" /></style_text>
+    <style_text textobj="empty_obj" id="empty_style"><textobj font_size="24" color="0.83,0.85,0.90,1" align_x="1" align_y="1" text_align="1" word_wrap="1" id="empty_obj" /></style_text>
+    <style_text textobj="dialog_label_obj" id="dialog_label_style"><textobj font_size="22" color="0.92,0.94,1,1" align_x="0" align_y="1" id="dialog_label_obj" /></style_text>
+    <style_text textobj="dialog_value_obj" id="dialog_value_style"><textobj font_size="20" color="0.94,0.96,1,1" align_x="2" align_y="1" id="dialog_value_obj" /></style_text>
+    <style_text textobj="name_obj" id="row_name_style"><textobj font_size="28" color="1,1,1,1" align_x="0" align_y="1" ellipsis="1" id="name_obj" /></style_text>
+    <style_text textobj="detail_obj" id="row_detail_style"><textobj font_size="21" color="0.96,0.96,0.99,1" align_x="0" align_y="1" ellipsis="1" id="detail_obj" /></style_text>
+    <style_text textobj="state_obj" id="row_state_style"><textobj font_size="17" color="0.88,0.90,0.96,1" align_x="2" align_y="1" ellipsis="1" id="state_obj" /></style_text>
+  </styletable>
+  <stringtable /><texturetable>
+    <texture id="background_texture" src="assets/cm_background.png" type="texture/png" />
+    <texture id="row_surface_texture" src="assets/cm_row.png" type="texture/png" />
+    <texture id="photo_icon" src="assets/photo_system_rounded.png" type="texture/png" />
+    <texture id="music_icon" src="assets/music_system_rounded.png" type="texture/png" />
+    <texture id="video_icon" src="assets/video_system_rounded.png" type="texture/png" />
+  </texturetable><filetable />
+</resource>
