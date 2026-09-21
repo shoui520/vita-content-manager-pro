@@ -1,6 +1,7 @@
 #include <limits>
 #include <paf.h>
 #include <psp2/io/fcntl.h>
+#include <psp2/io/stat.h>
 #include <psp2/kernel/clib.h>
 #include <psp2/kernel/cpu.h>
 #include <psp2/kernel/modulemgr.h>
@@ -34,6 +35,16 @@ unsigned int g_usb_lock_mask = 0;
 int g_shell_events_status = -1;
 bool g_music_mount_active = false;
 bool g_music_apputil_active = false;
+
+int EnsureDataDirectory() {
+    static const char path[] = "ux0:/data/vita-content-manager";
+    int status = sceIoMkdir(path, 0777);
+    if (status >= 0) return 0;
+    SceIoStat stat;
+    sceClibMemset(&stat, 0, sizeof(stat));
+    if (sceIoGetstat(path, &stat) < 0 || !SCE_S_ISDIR(stat.st_mode)) return status;
+    return 0;
+}
 
 void LogUsbMode(const char *event, int value) {
     SceUID fd = sceIoOpen("ux0:/data/vita-content-manager/vcm-usb-mode.log",
@@ -209,7 +220,12 @@ void PollImport(void *) {
         queue_ui_update_ip();
     }
     if (g_wifi_worker && g_wifi_worker->Finished() && !g_wifi_error_reported) {
-        if (g_status) g_status->SetString(L"Wi-Fi service stopped. See vcm-wifi.log.");
+        if (g_status) {
+            char message[80];
+            sceClibSnprintf(message, sizeof(message), "Wi-Fi failed: 0x%08X",
+                            (unsigned int)g_wifi_worker->Result());
+            queue_text(g_status, message);
+        }
         g_wifi_error_reported = true;
     }
     if(g_worker && g_worker->Finished()) {
@@ -240,7 +256,6 @@ void OnPluginLoaded(paf::Plugin *plugin) {
     }
     if (vcm_queue_init() == 0) {
         queue_ui_init(plugin,scene);
-        EnsureMusicAccess();
         g_wifi_worker = new WifiWorker();
         if (!g_wifi_worker || g_wifi_worker->Start() != 0) {
             if (g_status) g_status->SetString(L"Could not start Wi-Fi receiver.");
@@ -318,6 +333,7 @@ struct ScePafInit {
 };
 
 int module_start(SceSize, void *) {
+    EnsureDataDirectory();
     log_startup("module_start",0,0);
     ScePafInit init_param;
     init_param.global_heap_size = 0x00800000;

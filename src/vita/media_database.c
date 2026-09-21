@@ -399,7 +399,10 @@ static int read_id3_from_vita(SceUID log_fd, const char *path, VcmId3Tags *tags)
     return status == 0 ? 0 : -1;
 }
 
-static int mount_music_for_file_import(SceUID log_fd) {
+static int mount_music_for_file_import(SceUID log_fd, int *owns_apputil,
+                                       int *owns_mount) {
+    *owns_apputil = 0;
+    *owns_mount = 0;
     int status = sceSysmoduleLoadModule(SCE_SYSMODULE_APPUTIL);
     record(log_fd, "load AppUtil for music mount", status);
     if (status < 0) return -1;
@@ -409,18 +412,33 @@ static int mount_music_for_file_import(SceUID log_fd) {
     sceClibMemset(&boot, 0, sizeof(boot));
     status = sceAppUtilInit(&init, &boot);
     record(log_fd, "initialize AppUtil for music mount", status);
-    if (status < 0) return -1;
+    if (status == 0) {
+        *owns_apputil = 1;
+    } else if ((unsigned int)status != SCE_APPUTIL_ERROR_BUSY) {
+        return -1;
+    } else {
+        record(log_fd, "borrow existing AppUtil session", 0);
+    }
     status = sceAppUtilMusicMount();
     record(log_fd, "mount music0 for file import", status);
-    if (status < 0) {
-        record(log_fd, "shutdown AppUtil after mount failure", sceAppUtilShutdown());
+    if (status == 0) {
+        *owns_mount = 1;
+    } else if ((unsigned int)status == SCE_APPUTIL_ERROR_BUSY) {
+        record(log_fd, "borrow existing music mount", 0);
+    } else {
+        if (*owns_apputil) {
+            record(log_fd, "shutdown AppUtil after mount failure", sceAppUtilShutdown());
+            *owns_apputil = 0;
+        }
         return -1;
     }
     return 0;
 }
 
 int vcm_music_sync_mp3(SceUID log, const VcmQueueItem *item, const char *source, char *output) {
-    if (mount_music_for_file_import(log) < 0) return -1;
+    int owns_apputil = 0;
+    int owns_mount = 0;
+    if (mount_music_for_file_import(log, &owns_apputil, &owns_mount) < 0) return -1;
     int result = -1;
     sceClibSnprintf(output, 1024, "ux0:/music/vcm-%s.mp3", item->id);
     SceIoStat st;
@@ -438,22 +456,25 @@ int vcm_music_sync_mp3(SceUID log, const VcmQueueItem *item, const char *source,
     if (probe(log) == 0 && sceIoGetstat(output, &st) < 0 && sceIoGetstat(source, &st) == 0) {
         /* Both paths are on ux0:; renaming avoids a second full music copy.
          * Restore the staged source if the database transaction fails. */
-        char mounted[160];
-        sceClibSnprintf(mounted,sizeof(mounted),"music0:/vcm-%s.mp3",item->id);
-        result = sceIoRename(source, mounted);
+        /* AppUtil's music0: view is suitable for stock-library access, but
+         * a clean homebrew process cannot create files through that alias.
+         * Publish through its physical ux0: backing path instead. */
+        char destination[160];
+        sceClibSnprintf(destination,sizeof(destination),"ux0:/music/vcm-%s.mp3",item->id);
+        result = sceIoRename(source, destination);
         int moved = result == 0;
         if (!moved) {
             long long size=0;
-            result=copy_song(log,source,mounted,&size);
+            result=copy_song(log,source,destination,&size);
         }
         if (result == 0) {
             result = sceIoSync("ux0:", 0);
             if (result == 0) result = register_song_with_facts(log, kDb, output, tags.title,
                 st.st_size, 1, &tags, item->sample_rate, item->channels, item->duration_ms);
-            if (result != 0 && moved) sceIoRename(mounted, source);
+            if (result != 0 && moved) sceIoRename(destination, source);
         }
     }
-    sceAppUtilMusicUmount();
-    sceAppUtilShutdown();
+    if (owns_mount) record(log, "unmount importer music access", sceAppUtilMusicUmount());
+    if (owns_apputil) record(log, "shutdown importer AppUtil", sceAppUtilShutdown());
     return result;
 }

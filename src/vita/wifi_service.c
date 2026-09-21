@@ -22,6 +22,7 @@
 #define VCM_CHUNK_SIZE 16384
 #define VCM_MAX_UPLOAD (8ULL * 1024ULL * 1024ULL * 1024ULL)
 
+static const char kDataRoot[] = "ux0:/data/vita-content-manager";
 static const char kInbox[] = "ux0:/data/vita-content-manager/wifi";
 static const char kLog[] = "ux0:/data/vita-content-manager/vcm-wifi.log";
 static volatile int g_stop;
@@ -30,6 +31,15 @@ static volatile int g_netctl_ready;
 static volatile int g_usb_mode_enabled;
 static volatile int g_usb_catalog_served;
 static unsigned char g_net_memory[512 * 1024];
+
+static int ensure_directory(const char *path) {
+    int status = sceIoMkdir(path, 0777);
+    if (status >= 0) return 0;
+    SceIoStat stat;
+    sceClibMemset(&stat, 0, sizeof(stat));
+    if (sceIoGetstat(path, &stat) < 0 || !SCE_S_ISDIR(stat.st_mode)) return status;
+    return 0;
+}
 
 static void log_event(const char *event, int status) {
     SceUID fd = sceIoOpen(kLog, SCE_O_WRONLY | SCE_O_CREAT | SCE_O_APPEND, 0666);
@@ -681,7 +691,11 @@ static int open_listener(int loopback_only) {
 int vcm_wifi_serve(void) {
     g_stop = 0;
     g_listening = 0;
-    int status = sceSysmoduleLoadModule(SCE_SYSMODULE_NET);
+    int status = ensure_directory(kDataRoot);
+    if (status < 0) return status;
+    status = ensure_directory(kInbox);
+    if (status < 0) { log_event("create Wi-Fi inbox", status); return status; }
+    status = sceSysmoduleLoadModule(SCE_SYSMODULE_NET);
     if (status < 0) { log_event("load network module", status); return status; }
     SceNetInitParam init = {g_net_memory, sizeof(g_net_memory), 0};
     status = sceNetInit(&init);
@@ -696,15 +710,6 @@ int vcm_wifi_serve(void) {
         g_netctl_ready = 0;
         if (netctl_status >= 0) sceNetCtlTerm();
         return server;
-    }
-    status = sceIoMkdir(kInbox, 0777);
-    SceIoStat stat;
-    if (status < 0 && sceIoGetstat(kInbox, &stat) < 0) {
-        log_event("create Wi-Fi inbox", status);
-        sceNetSocketClose(server);
-        g_netctl_ready = 0;
-        if (netctl_status >= 0) sceNetCtlTerm();
-        return status;
     }
     g_listening = 1;
     log_event("listening on port 39323", 0);
