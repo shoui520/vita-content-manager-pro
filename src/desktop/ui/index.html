@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vita Content Manager Pro</title>
+  <link rel="stylesheet" href="style.css?v=library-2">
+</head>
+<body>
+  <main class="application">
+    <header class="titlebar">
+      <img src="assets/content-manager-pro.png" alt="" width="48" height="48">
+      <h1>Content Manager Pro</h1>
+      <span class="connection"><span id="connection-dot"></span><span id="connection-label">Not connected</span></span>
+    </header>
+    <div class="toolbar">
+      <button id="browse-vita" type="button">From PS Vita…</button>
+      <button id="back-to-vita" type="button" hidden>← To PS Vita</button>
+      <span class="separator"></span>
+      <button id="choose-files" type="button">Add files…</button>
+      <button id="choose-video-folder" type="button" title="Add videos directly inside a folder; its name becomes a Videos app folder">Add video folder…</button>
+      <button id="remove-selected" type="button" disabled>Remove</button>
+      <span class="separator"></span>
+      <label for="vita-address">PS Vita</label>
+      <input id="vita-address" value="192.168.0.155" placeholder="IP address" inputmode="decimal" spellcheck="false">
+      <button id="probe" type="button">Check connection</button>
+    </div>
+    <section class="list-area" id="dropzone" aria-label="Files to convert">
+      <div class="ambient-space" aria-hidden="true">
+        <div class="ambient-wave wave-one">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 600" preserveAspectRatio="none">
+            <defs>
+              <radialGradient id="ambient-haze"><stop stop-color="#8ab8d5" stop-opacity=".26"/><stop offset=".45" stop-color="#738baa" stop-opacity=".12"/><stop offset="1" stop-color="#738baa" stop-opacity="0"/></radialGradient>
+              <linearGradient id="ambient-light"><stop stop-color="#91a9c8" stop-opacity=".08"/><stop offset=".4" stop-color="#a7c7db" stop-opacity=".4"/><stop offset=".78" stop-color="#c4dce9" stop-opacity=".55"/><stop offset="1" stop-color="#9cc2dc" stop-opacity=".15"/></linearGradient>
+              <path id="ambient-curve" d="M-220 335 C320 485 820 475 1620 170"/>
+              <!-- Static blur within the SVG; only the finished layer moves. -->
+              <filter id="ambient-soft" filterUnits="userSpaceOnUse" x="-300" y="0" width="2000" height="800" color-interpolation-filters="sRGB"><feGaussianBlur stdDeviation="18"/></filter>
+            </defs>
+            <g id="ambient-art">
+              <ellipse cx="1000" cy="370" rx="940" ry="350" fill="url(#ambient-haze)"/>
+              <g fill="none" stroke="url(#ambient-light)" filter="url(#ambient-soft)">
+                <use href="#ambient-curve" stroke-width="190" opacity=".09"/>
+                <use href="#ambient-curve" stroke-width="95" opacity=".16"/>
+                <use href="#ambient-curve" stroke-width="30" opacity=".4"/>
+              </g>
+            </g>
+          </svg>
+        </div>
+        <div class="ambient-wave wave-two"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 600" preserveAspectRatio="none"><ellipse cx="430" cy="400" rx="800" ry="300" fill="url(#ambient-haze)"/></svg></div>
+      </div>
+      <div class="list-scroll">
+      <table>
+        <colgroup><col class="check-column"><col><col class="type-column"><col class="size-column"><col class="eligible-column"><col class="status-column"></colgroup>
+        <thead><tr><th><input id="select-all" type="checkbox" aria-label="Select all files"></th><th scope="col" data-sort="name" aria-sort="none"><button class="sort-button" type="button">Name</button></th><th scope="col" data-sort="format" aria-sort="none"><button class="sort-button" type="button">Format</button></th><th scope="col" data-sort="size" aria-sort="none"><button class="sort-button" type="button">Size</button></th><th scope="col" data-sort="eligible" aria-sort="none"><button class="sort-button" type="button">Eligible</button></th><th scope="col" data-sort="status" aria-sort="none"><button class="sort-button" type="button">Status</button></th></tr></thead>
+        <tbody id="file-list"></tbody>
+      </table>
+      </div>
+      <div class="empty-state" id="empty-state">Drop files here, or choose <button id="empty-add" type="button">Add files…</button></div>
+    </section>
+    <section id="vita-library" class="vita-library" hidden aria-label="Media on PS Vita">
+      <nav class="library-categories" aria-label="Media categories">
+        <button type="button" data-library-kind="photo" aria-pressed="true">Photo</button>
+        <button type="button" data-library-kind="music" aria-pressed="false">Music</button>
+        <button type="button" data-library-kind="video" aria-pressed="false">Video</button>
+        <button type="button" id="refresh-library" title="Reload the selected category">Refresh</button>
+        <button type="button" id="select-all-library">Select all</button>
+      </nav>
+      <div id="library-scroll" class="library-scroll">
+        <div id="library-photos" class="library-photos"></div>
+        <table id="library-table" class="library-table" hidden>
+          <colgroup><col class="check-column"><col><col class="library-detail-column"><col class="size-column"></colgroup>
+          <thead><tr><th></th><th>Name</th><th id="library-detail-heading">Artist / album</th><th>Size</th></tr></thead>
+          <tbody id="library-rows"></tbody>
+        </table>
+        <div id="library-empty" class="library-empty" hidden>No media in this category.</div>
+      </div>
+    </section>
+    <section id="sync-progress" class="sync-progress" hidden aria-label="Transfer and import progress">
+      <div class="sync-heading"><span id="sync-description">Preparing transfer…</span><button id="cancel-sync" type="button">Cancel</button></div>
+      <div class="sync-measures">
+        <div class="sync-measure"><div class="sync-label"><span>Transferred</span><span id="transfer-value">0 MB</span></div><div id="transfer-progress" class="sony-progress" role="progressbar" aria-label="Transferred" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="sony-progress-fill"></div></div></div>
+        <div class="sync-measure"><div class="sync-label"><span>Imported</span><span id="import-value">0 files</span></div><div id="import-progress" class="sony-progress" role="progressbar" aria-label="Imported" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="sony-progress-fill"></div></div></div>
+      </div>
+    </section>
+    <footer class="actionbar">
+      <span id="file-count">0 files</span><span class="action-spacer"></span>
+      <button id="convert" class="default-button" type="button" disabled>Options…</button>
+      <button id="copy-to-vita" type="button" disabled title="Transfer selected files and import them into the Vita media apps">Transfer / sync</button>
+    </footer>
+    <footer id="library-actions" class="actionbar library-actions" hidden>
+      <span id="library-count">0 selected</span><span class="action-spacer"></span>
+      <button id="copy-from-vita" class="default-button" type="button" disabled>Copy to PC…</button>
+    </footer>
+    <section id="download-progress" class="sync-progress" hidden aria-label="Copy from PS Vita progress">
+      <div class="sync-heading"><span id="download-description">Copying from PS Vita…</span><button id="cancel-download" type="button">Cancel</button></div>
+      <div class="sync-label"><span>Transferred</span><span id="download-value">0 MB</span></div>
+      <div id="download-bar" class="sony-progress" role="progressbar" aria-label="Copied from PS Vita" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="sony-progress-fill"></div></div>
+    </section>
+    <div id="status-line" role="status" aria-live="polite">Ready</div>
+  </main>
+  <dialog id="options-dialog" aria-labelledby="options-title">
+    <header class="dialog-title"><h2 id="options-title">Conversion options</h2></header>
+    <div class="dialog-body">
+      <label class="file-choice">File <select id="options-file"></select></label>
+      <p id="source-description"></p>
+      <div id="eligibility-detail"></div>
+      <div id="options-tabs" role="tablist"></div>
+      <div id="options-fields" role="tabpanel"></div>
+      <label class="keep-setting"><input type="checkbox" id="keep-compatible"> Keep original encoding if already eligible</label>
+      <p id="format-notes"></p>
+      <section id="conversion-progress" hidden aria-label="Conversion progress">
+        <div class="sync-label"><span id="conversion-phase">Preparing…</span><span id="conversion-value"></span></div>
+        <div id="conversion-bar" class="sony-progress" role="progressbar" aria-label="Conversion" aria-valuemin="0" aria-valuemax="100"><div class="sony-progress-fill"></div></div>
+        <div class="conversion-controls"><button id="stop-conversion" class="stop-button" type="button" disabled>Stop</button></div>
+      </section>
+      <p id="options-result" role="status"></p>
+    </div>
+    <footer class="dialog-actions"><button id="reset-options" type="button">Restore defaults</button><span class="action-spacer"></span><button id="apply-conversion" class="default-button" type="button">Convert</button><button id="close-options" type="button">Close</button></footer>
+  </dialog>
+  <script src="app.js?v=connection-1"></script>
+  <script src="library.js?v=library-2"></script>
+  <script src="options.js?v=wifi-1"></script>
+</body>
+</html>

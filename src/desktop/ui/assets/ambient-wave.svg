@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="600" viewBox="0 0 1400 600" preserveAspectRatio="none">
+  <defs>
+    <radialGradient id="haze"><stop stop-color="#849fbb" stop-opacity=".18"/><stop offset=".5" stop-color="#748fae" stop-opacity=".07"/><stop offset="1" stop-color="#748fae" stop-opacity="0"/></radialGradient>
+    <linearGradient id="light"><stop stop-color="#7199b7" stop-opacity="0"/><stop offset=".25" stop-color="#83adcb" stop-opacity=".14"/><stop offset=".55" stop-color="#c0d9e5" stop-opacity=".38"/><stop offset=".8" stop-color="#8f95bd" stop-opacity=".13"/><stop offset="1" stop-color="#8f95bd" stop-opacity="0"/></linearGradient>
+    <path id="wave" d="M-100 375 C200 70 360 555 760 295 S1160 160 1500 340"/>
+  </defs>
+  <!-- Softness is static vector shading, not a live blur/backdrop filter. -->
+  <ellipse cx="730" cy="300" rx="680" ry="225" fill="url(#haze)"/>
+  <g fill="none" stroke="url(#light)">
+    <use href="#wave" stroke-width="96" opacity=".035"/>
+    <use href="#wave" stroke-width="64" opacity=".05"/>
+    <use href="#wave" stroke-width="40" opacity=".07"/>
+    <use href="#wave" stroke-width="22" opacity=".1"/>
+    <use href="#wave" stroke-width="10" opacity=".15"/>
+    <use href="#wave" stroke-width="3" opacity=".35"/>
+    <use href="#wave" stroke-width="1" opacity=".7"/>
+  </g>
+</svg>
